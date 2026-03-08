@@ -1,0 +1,32 @@
+@model IEnumerable<SparshaERP.Models.Client>
+
+<h3>Clients</h3>
+
+<a class="btn btn-primary mb-3" asp-action="Create">+ Add Client</a>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Phone</th>
+            <th>City</th>
+            <th width="150">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.CompanyName</td>
+                <td>@item.Phone</td>
+                <td>@item.City</td>
+                <td>
+                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

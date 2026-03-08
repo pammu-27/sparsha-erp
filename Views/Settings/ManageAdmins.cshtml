@@ -1,0 +1,159 @@
+@model List<SparshaERP.Models.AdminUser>
+
+@{
+    ViewData["Title"] = "Manage Admin Users";
+    bool isSuperAdmin = Context.Session.GetString("Role") == "SuperAdmin";
+}
+
+<style>
+.erp-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+.erp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.badge-active {
+    background: #e6f7ee;
+    color: #0f9d58;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+.badge-inactive {
+    background: #fdecea;
+    color: #d93025;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+.action-btns form {
+    margin-bottom: 6px;
+}
+.btn-outline-secondary {
+    border: 1px solid #d1d5db;
+    color: #374151;
+    background: #fff;
+}
+.btn-outline-secondary:hover {
+    background: #f3f4f6;
+}
+</style>
+
+<!-- ================= BACK ================= -->
+<div class="mb-3">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        ← Back
+    </a>
+</div>
+
+<!-- ================= ADD ADMIN ================= -->
+@if (isSuperAdmin)
+{
+<div class="erp-card mb-4">
+    <h5 class="mb-3">Add New Admin</h5>
+
+    <form method="post" asp-action="AddAdmin">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <input name="name" class="form-control" placeholder="Name" required />
+            </div>
+            <div class="col-md-3 mb-2">
+                <input name="email" class="form-control" placeholder="Email" required />
+            </div>
+            <div class="col-md-3 mb-2">
+                <input name="username" class="form-control" placeholder="Username" required />
+            </div>
+            <div class="col-md-3 mb-2">
+                <input name="password" type="password" class="form-control"
+                       placeholder="Initial Password" required />
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-2">Add Admin</button>
+    </form>
+</div>
+}
+
+<!-- ================= MANAGE ADMINS ================= -->
+<div class="erp-card">
+    <div class="erp-header">
+        <h3>Manage Admin Users</h3>
+    </div>
+
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th style="width:300px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach (var admin in Model)
+{
+            <tr>
+                <td>@admin.Name</td>
+                <td>@admin.Email</td>
+                <td>@admin.Username</td>
+                <td>@admin.Role</td>
+                <td>
+                    @if (admin.IsActive)
+                    {
+                        <span class="badge-active">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge-inactive">Inactive</span>
+                    }
+                </td>
+
+                <td class="action-btns">
+                @* SUPER ADMIN ACTIONS ONLY *@
+                @if (isSuperAdmin && admin.Role != "SuperAdmin")
+                {
+                    <!-- SET PASSWORD (OPTION 2) -->
+                    <form asp-action="SetAdminPassword" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="adminId" value="@admin.Id" />
+
+                        <input type="password" name="newPassword"
+                               class="form-control form-control-sm mb-1"
+                               placeholder="New Password" required />
+
+                        <input type="password" name="confirmPassword"
+                               class="form-control form-control-sm mb-1"
+                               placeholder="Confirm Password" required />
+
+                        <button class="btn btn-sm btn-danger w-100"
+                                onclick="return confirm('Set new password for this admin?');">
+                            Set Password
+                        </button>
+                    </form>
+
+                    <!-- ACTIVATE / DEACTIVATE -->
+                    <form asp-action="ToggleAdmin" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@admin.Id" />
+                        <button class="btn btn-sm btn-warning w-100"
+                                onclick="return confirm('Change admin status?');">
+                            @(admin.IsActive ? "Deactivate" : "Activate")
+                        </button>
+                    </form>
+                }
+                </td>
+            </tr>
+}
+        </tbody>
+    </table>
+</div>

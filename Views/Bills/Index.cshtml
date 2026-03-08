@@ -1,0 +1,275 @@
+@model List<SparshaERP.Models.Bill>
+
+@{
+    ViewData["Title"] = "Bills";
+}
+
+<div class="container-fluid">
+
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">💰 Bills / Invoices</h3>
+
+        <a asp-action="Create" class="btn btn-primary">
+            + New Bill
+        </a>
+    </div>
+
+
+    <!-- ================= SEARCH + FILTER ================= -->
+    <div class="row g-2 mb-3">
+
+        <!-- Search -->
+        <div class="col-md-4">
+            <input id="searchBox"
+                   class="form-control shadow-sm"
+                   placeholder="🔍 Search Invoice No or Client name..." />
+        </div>
+
+        <!-- Filter -->
+        <div class="col-md-3">
+            <select id="filterStatus" class="form-select shadow-sm">
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="overdue">Overdue</option>
+            </select>
+        </div>
+
+    </div>
+
+
+    <!-- ================= TABLE ================= -->
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+
+            <table id="billTable"
+                   class="table table-hover align-middle mb-0">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Client</th>
+                        <th>Date & Time</th>
+                        <th>Due</th>
+                        <th>Total</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th width="330">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+@foreach (var b in Model)
+{
+    var balance = b.TotalAmount - b.PaidAmount;
+
+    bool isOverdue = DateTime.Today > b.DueDate && balance > 0;
+
+    string rowClass = isOverdue ? "table-danger" : "";
+
+    string status =
+        balance == 0 ? "paid" :
+        isOverdue ? "overdue" :
+        "unpaid";
+
+    <tr class="bill-row @rowClass"
+        data-status="@status">
+
+        <!-- Invoice -->
+        <td class="fw-bold text-primary">
+            @b.InvoiceNo
+        </td>
+
+        <!-- Client -->
+        <td>
+            @b.Client?.Name
+        </td>
+
+        <!-- Date + Time -->
+        <td>
+            @b.Date.ToString("dd-MM-yyyy")
+            <br />
+            <small class="text-muted">
+                @b.Date.ToString("hh:mm tt")
+            </small>
+        </td>
+
+        <!-- Due Date -->
+        <td>
+    @if (b.DueDate.HasValue)
+    {
+        <span class="@(b.DueDate < DateTime.Today && b.TotalAmount > b.PaidAmount ? "text-danger fw-bold" : "")">
+            @b.DueDate.Value.ToString("dd-MM-yyyy")
+        </span>
+    }
+    else
+    {
+        <span class="text-muted">Not set</span>
+    }
+</td>
+
+
+        <!-- Total -->
+        <td class="fw-bold">
+            ₹ @b.TotalAmount.ToString("0.00")
+        </td>
+
+        <!-- Paid -->
+        <td class="text-success">
+            ₹ @b.PaidAmount.ToString("0.00")
+        </td>
+
+        <!-- Balance -->
+        <td class="@(balance > 0 ? "text-danger fw-bold" : "text-success")">
+            ₹ @balance.ToString("0.00")
+        </td>
+
+        <!-- Actions -->
+        <td>
+
+            <a asp-action="Print"
+               asp-route-id="@b.Id"
+               class="btn btn-sm btn-info">
+                PDF
+            </a>
+
+            <a asp-action="ExportExcel"
+               asp-route-id="@b.Id"
+               class="btn btn-sm btn-success">
+                Excel
+            </a>
+
+            <a target="_blank"
+               href="https://wa.me/?text=@Url.Action("Print","Bills",new{id=b.Id},Context.Request.Scheme)"
+               class="btn btn-sm btn-dark">
+                WhatsApp
+            </a>
+
+            <a asp-action="Edit"
+               asp-route-id="@b.Id"
+               class="btn btn-sm btn-warning">
+                Edit
+            </a>
+
+            <form asp-action="SetDueDate"
+                  method="post"
+                  class="d-inline">
+                <input type="hidden" name="id" value="@b.Id" />
+
+                <input type="date"
+                       name="dueDate"
+                       class="form-control form-control-sm d-inline"
+                       style="width:135px"
+                       required />
+
+                <button type="submit"
+                        class="btn btn-sm btn-secondary mt-1">
+                    Set Due
+                </button>
+            </form>
+
+            <a asp-action="Delete"
+               asp-route-id="@b.Id"
+               onclick="return confirm('Delete this bill?')"
+               class="btn btn-sm btn-danger">
+                Delete
+            </a>
+
+        </td>
+
+    </tr>
+}
+
+                </tbody>
+            </table>
+<!-- ================= DUE DATE MODAL ================= -->
+
+
+
+<div class="modal fade" id="dueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Set Due Date</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="date" id="dueInput" class="form-control" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveDue()">Set</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ================= SEARCH + FILTER SCRIPT ================= -->
+
+<script>
+const searchBox = document.getElementById("searchBox");
+const filterStatus = document.getElementById("filterStatus");
+const rows = document.querySelectorAll(".bill-row");
+
+function filterRows() {
+
+    const text = searchBox.value.toLowerCase();
+    const status = filterStatus.value;
+
+    rows.forEach(r => {
+
+        const rowText = r.innerText.toLowerCase();
+        const rowStatus = r.dataset.status;
+
+        let show = true;
+
+        if (text && !rowText.includes(text))
+            show = false;
+
+        if (status && rowStatus !== status)
+            show = false;
+
+        r.style.display = show ? "" : "none";
+    });
+}
+
+searchBox.addEventListener("keyup", filterRows);
+filterStatus.addEventListener("change", filterRows);
+
+let currentBillId = 0;
+
+function openDueModal(id) {
+    currentBillId = id;
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("dueInput").value = today;
+
+    const modal = new bootstrap.Modal(document.getElementById('dueModal'));
+    modal.show();
+}
+
+function saveDue() {
+
+    const date = document.getElementById("dueInput").value;
+
+    fetch('/Bills/SetDueDate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${currentBillId}&dueDate=${date}`
+    })
+    .then(() => location.reload());
+}
+
+</script>

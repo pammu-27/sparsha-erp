@@ -1,0 +1,70 @@
+@model SparshaERP.Models.Bill
+
+<div class="container mt-4">
+
+<h4>Invoice : @Model.InvoiceNo</h4>
+
+<div class="card p-3">
+
+<p><b>Client:</b> @Model.Client?.Name</p>
+<p><b>Date:</b> @Model.Date.ToShortDateString()</p>
+
+<table class="table table-bordered">
+
+<thead>
+<tr>
+    <th>Description</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>Amount</th>
+</tr>
+</thead>
+
+<tbody>
+@foreach (var item in Model.Items)
+{
+<tr>
+    <td>@item.Description</td>
+    <td>@item.Qty</td>
+    <td>@item.Rate</td>
+    <td>@item.Amount</td>
+</tr>
+}
+</tbody>
+
+</table>
+
+<h5 class="text-end">Total : ₹ @Model.TotalAmount</h5>
+<hr />
+
+<h5>💳 Payments</h5>
+
+<p>Total: ₹ @Model.TotalAmount</p>
+<p>Paid: ₹ @Model.PaidAmount</p>
+<p>Balance: ₹ @(Model.TotalAmount - Model.PaidAmount)</p>
+
+<form asp-action="AddPayment" method="post" class="d-flex gap-2">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <input type="number" step="0.01" name="amount" class="form-control" placeholder="Enter amount" />
+    <button class="btn btn-primary">Add Payment</button>
+</form>
+
+<a asp-action="MarkPaid" asp-route-id="@Model.Id"
+   class="btn btn-success mt-2">Mark Fully Paid</a>
+
+
+<form asp-action="Edit" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-check">
+        <input asp-for="IsPaid" class="form-check-input" />
+        <label class="form-check-label">Mark as Paid</label>
+    </div>
+
+    <button class="btn btn-success mt-3">Save</button>
+
+</form>
+
+</div>
+</div>

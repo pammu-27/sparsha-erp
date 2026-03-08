@@ -1,0 +1,257 @@
+﻿@model SparshaERP.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.company-card {
+    background: linear-gradient(135deg, #041f60, #0476d0);
+    color: #fff;
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 28px;
+}
+
+.company-card h2 {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.company-meta {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.06);
+}
+
+.stat-title {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.section-title {
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.quick-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.06);
+    height: 100%;
+}
+
+.quick-card h6 {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.quick-card p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.table th {
+    font-size: 13px;
+    color: #6b7280;
+}
+</style>
+
+<div class="dashboard-container">
+
+<!-- ================= COMPANY HEADER ================= -->
+<div class="company-card">
+    <div class="row align-items-center">
+        <div class="col-md-9">
+            <h2>Sparsha Aluminium Fabrication & Interiors</h2>
+            <div class="company-meta">
+                Aluminium • ACP • Glass • Interior Works<br />
+                ERP Dashboard
+            </div>
+        </div>
+        <div class="col-md-3 text-md-end mt-3 mt-md-0">
+            <span class="badge bg-light text-dark px-3 py-2">
+                Admin Panel
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- ================= OVERDUE ALERT ================= -->
+@if (Model.OverdueBillsCount > 0)
+{
+    <div class="alert alert-danger mb-4">
+        ⚠ <strong>@Model.OverdueBillsCount overdue bills</strong>
+        | Pending Amount: ₹ @Model.OverdueAmount
+        <a asp-controller="Bills" asp-action="Index" class="alert-link ms-2">
+            View Bills
+        </a>
+    </div>
+}
+
+<!-- ================= KPI CARDS ================= -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-title">Total Quotations</div>
+            <div class="stat-value">@Model.TotalQuotations</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-title">Total Bills</div>
+            <div class="stat-value">@Model.TotalBills</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-title">Total Revenue</div>
+            <div class="stat-value">₹ @Model.TotalRevenue</div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MONTHLY REVENUE CHART ================= -->
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Monthly Revenue (Last 6 Months)</strong>
+    </div>
+    <div class="card-body">
+        <canvas id="revenueChart" height="90"></canvas>
+    </div>
+</div>
+
+<!-- ================= QUICK ACTIONS ================= -->
+<h5 class="section-title">Quick Actions</h5>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="quick-card">
+            <h6>Create Quotation</h6>
+            <p>Create a new quotation with auto calculation and PDF.</p>
+            <a asp-controller="Quotations" asp-action="Create"
+               class="btn btn-primary btn-sm">
+                New Quotation
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="quick-card">
+            <h6>Add Client</h6>
+            <p>Add a new client with contact and billing details.</p>
+            <a asp-controller="Clients" asp-action="Create"
+               class="btn btn-success btn-sm">
+                Add Client
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="quick-card">
+            <h6>View Bills</h6>
+            <p>Track invoices, due dates and payments.</p>
+            <a asp-controller="Bills" asp-action="Index"
+               class="btn btn-warning btn-sm">
+                View Bills
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ================= RECENT QUOTATIONS ================= -->
+<div class="card">
+    <div class="card-header">
+        <strong>Recent Quotations</strong>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Quote No</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+@if (Model.RecentQuotations.Any())
+{
+    foreach (var q in Model.RecentQuotations)
+    {
+                <tr>
+                    <td>@q.QuoteNo</td>
+                    <td>@q.Client?.Name</td>
+                    <td>@q.Date.ToString("dd MMM yyyy")</td>
+                    <td class="text-end">₹ @q.TotalAmount</td>
+                </tr>
+    }
+}
+else
+{
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                        No quotations found
+                    </td>
+                </tr>
+}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('revenueChart');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Months)),
+        datasets: [{
+            label: 'Revenue',
+            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyRevenue)),
+            borderWidth: 3,
+            tension: 0.4,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                ticks: {
+                    callback: value => '₹ ' + value
+                }
+            }
+        }
+    }
+});
+</script>

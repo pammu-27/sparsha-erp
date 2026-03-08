@@ -1,0 +1,215 @@
+@model SparshaERP.Models.Quotation
+@{
+    var clients = ViewBag.Clients as List<SparshaERP.Models.Client>;
+}
+
+<div class="container mt-4">
+
+<div class="card shadow-sm">
+
+<div class="card-header bg-warning text-dark">
+    <h5 class="mb-0">Edit Quotation</h5>
+</div>
+
+<div class="card-body">
+
+<form asp-action="Edit" method="post">
+
+<input type="hidden" asp-for="Id" />
+
+<!-- ================= CLIENT ================= -->
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-6">
+        <label class="form-label">Client</label>
+
+        <select id="clientSelect" asp-for="ClientId" class="form-select">
+
+            @foreach (var c in clients!)
+            {
+                <option value="@c.Id"
+                        data-address="@c.Address"
+                        data-phone="@c.Phone"
+                        data-zip="@c.ZipCode"
+                        selected="@(c.Id == Model.ClientId)">
+                    @c.Name
+                </option>
+            }
+
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label>Phone</label>
+        <input id="phone" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-6">
+        <label>Address</label>
+        <input id="address" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-6">
+        <label>ZIP</label>
+        <input id="zip" class="form-control" readonly />
+    </div>
+
+</div>
+
+<hr/>
+
+<!-- ================= ITEMS ================= -->
+
+<div class="table-responsive">
+<table class="table table-bordered align-middle">
+
+<thead class="table-light">
+<tr>
+    <th>Description</th>
+    <th width="100">Qty</th>
+    <th width="120">Rate</th>
+    <th width="150">Amount</th>
+    <th width="60"></th>
+</tr>
+</thead>
+
+<tbody id="itemsBody">
+
+@foreach (var it in Model.Items)
+{
+<tr>
+    <td>
+        <input name="description" value="@it.Description" class="form-control desc" />
+    </td>
+
+    <td>
+        <input name="qty" value="@it.Qty" class="form-control qty" oninput="calc()" />
+    </td>
+
+    <td>
+        <input name="rate" value="@it.Rate" class="form-control rate" oninput="calc()" />
+    </td>
+
+    <td>
+        <input value="@it.Amount" class="form-control amt" readonly />
+    </td>
+
+    <td>
+        <button type="button" class="btn btn-danger btn-sm"
+                onclick="this.closest('tr').remove(); calc();">X</button>
+    </td>
+</tr>
+}
+
+</tbody>
+
+</table>
+</div>
+
+<button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow()">
++ Add Item
+</button>
+
+<hr/>
+
+<!-- ================= CHARGES ================= -->
+
+<div class="row g-3 mb-3">
+
+    <div class="col-md-4 form-check">
+        <input id="taxToggle" asp-for="ApplyTax" type="checkbox" class="form-check-input" 
+               onchange="calc()" />
+        <label class="form-check-label">Tax %</label>
+       <input id="taxRate" asp-for="TaxPercent" value="18" class="form-control mt-1" oninput="calc()" />
+    </div>
+
+    <div class="col-md-4 form-check">
+        <input id="transportToggle" asp-for="ApplyTransport" type="checkbox" class="form-check-input"
+               onchange="calc()" />
+        <label>Transport</label>
+        <input id="transportInput" asp-for="TransportCharge" class="form-control mt-1" oninput="calc()" />
+    </div>
+
+    <div class="col-md-4 form-check">
+        <input id="otherToggle" asp-for="ApplyOther" type="checkbox" class="form-check-input"
+               onchange="calc()" />
+        <label>Other</label>
+        <input id="otherInput" asp-for="OtherCharge" class="form-control mt-1" oninput="calc()" />
+    </div>
+
+</div>
+
+<!-- ================= TOTAL ================= -->
+
+<div class="bg-light p-3 rounded text-end mb-3">
+    <h6>Items Subtotal : ₹ <span id="subTotal"></span></h6>
+    <h5 class="text-success fw-bold">Grand Total : ₹ <span id="grandTotal">0.00</span></h5>
+</div>
+
+<button class="btn btn-success w-100">Update Quotation</button>
+
+</form>
+
+</div>
+</div>
+</div>
+
+
+<!-- ================= SAFE JS (ONLY HELPERS) ================= -->
+
+<script>
+
+function addRow()
+{
+    document.getElementById("itemsBody").insertAdjacentHTML("beforeend", `
+    <tr>
+        <td><input name="description" /></td>
+        <td><input class="qty" name="qty" value="1" oninput="calc()" /></td>
+        <td><input class="rate" name="rate" value="0" oninput="calc()" /></td>
+        <td><input class="amt" readonly /></td>
+        <td><button type="button" onclick="this.closest('tr').remove();calc()">X</button></td>
+    </tr>`);
+}
+
+function calc()
+{
+    let subtotal = 0;
+
+    document.querySelectorAll("#itemsBody tr").forEach(r => {
+
+        let q = +r.querySelector(".qty").value || 0;
+        let rate = +r.querySelector(".rate").value || 0;
+
+        let amt = q * rate;
+
+        r.querySelector(".amt").value = amt.toFixed(2);
+
+        subtotal += amt;
+    });
+
+    // ✅ preview values
+    subTotal.innerText = subtotal.toFixed(2);
+
+    let tax = taxToggle.checked ? subtotal * (taxRate.value/100) : 0;
+    let transport = transportToggle.checked ? +transportInput.value : 0;
+    let other = otherToggle.checked ? +otherInput.value : 0;
+
+    let grand = subtotal + tax + transport + other;
+
+    grandTotal.innerText = grand.toFixed(2);
+}
+
+
+clientSelect.onchange = function(){
+    let opt = this.selectedOptions[0];
+    address.value = opt.dataset.address || "";
+    phone.value = opt.dataset.phone || "";
+    zip.value = opt.dataset.zip || "";
+};
+
+clientSelect.dispatchEvent(new Event("change"));
+
+calc();
+
+</script>

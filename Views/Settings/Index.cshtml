@@ -1,0 +1,249 @@
+@model SparshaERP.Models.AdminUser
+@{
+    ViewData["Title"] = "Admin Settings";
+    bool isSuperAdmin = Context.Session.GetString("Role") == "SuperAdmin";
+}
+
+<style>
+.settings-container {
+    max-width: 2000px;
+    margin: auto;
+}
+.card {
+    border-radius: 1px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.06);
+}
+.progress {
+    height: 8px;
+    border-radius: 10px;
+}
+.progress-bar {
+    transition: width 0.4s ease;
+}
+.fade-slide {
+    animation: slideFade 0.4s ease;
+}
+@@keyframes slideFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="settings-container">
+
+<h3>Admin Settings</h3>
+<hr />
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab">
+            Profile
+        </button>
+    </li>
+
+@if (isSuperAdmin)
+{
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#securityTab">
+            Security
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usersTab">
+            Users
+        </button>
+    </li>
+}
+</ul>
+
+<div class="tab-content">
+
+<!-- ================= PROFILE ================= -->
+<div class="tab-pane fade show active fade-slide" id="profileTab">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between">
+            <strong>Profile Details</strong>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr><th>Name</th><td>@Model.Name</td></tr>
+                <tr><th>Email</th><td>@Model.Email</td></tr>
+                <tr><th>Username</th><td>@Model.Username</td></tr>
+                <tr><th>Role</th><td><span class="badge bg-dark">@Model.Role</span></td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SECURITY ================= -->
+@if (isSuperAdmin)
+{
+<div class="tab-pane fade fade-slide" id="securityTab">
+    <div class="card">
+        <div class="card-header"><strong>Change Super Admin Password</strong></div>
+        <div class="card-body">
+
+<form id="changePasswordForm"
+      asp-action="ChangeSuperAdminPassword"
+      method="post">
+@Html.AntiForgeryToken()
+
+<div class="mb-3">
+    <label>Current Password</label>
+    <input type="password" name="currentPassword" class="form-control" required />
+</div>
+
+<div class="mb-3">
+    <label>New Password</label>
+    <input type="password"
+           id="newPassword"
+           name="newPassword"
+           class="form-control"
+           required
+           oninput="checkStrength()" />
+    <div class="progress mt-2">
+        <div id="strengthBar" class="progress-bar"></div>
+    </div>
+    <small id="strengthText" class="text-muted"></small>
+</div>
+
+<div class="mb-3">
+    <label>Confirm Password</label>
+    <input type="password" name="confirmPassword" class="form-control" required />
+</div>
+
+<div class="mb-3 d-none" id="otpSection">
+    <label>
+        OTP <small class="text-muted">(sent to @ViewBag.MaskedEmail)</small>
+    </label>
+    <input type="text" name="otp" id="otpInput" class="form-control" />
+    <small id="resendText" class="text-muted d-block mt-1"></small>
+</div>
+
+<button type="button"
+        id="sendOtpBtn"
+        class="btn btn-warning"
+        onclick="sendOtp()">
+    Send OTP
+</button>
+
+<button type="submit"
+        id="verifyBtn"
+        class="btn btn-danger d-none"
+        disabled>
+    Verify & Update Password
+</button>
+
+</form>
+        </div>
+    </div>
+</div>
+}
+
+<!-- ================= USERS ================= -->
+@if (isSuperAdmin)
+{
+<div class="tab-pane fade fade-slide" id="usersTab">
+    <a asp-action="ManageAdmins" class="btn btn-dark">
+        Open Admin User Management
+    </a>
+</div>
+}
+
+</div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+            <div class="spinner-border text-success mb-3"></div>
+            <h5>Password Updated Successfully</h5>
+            <p class="text-muted">Logging you out for security…</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let otpTimer = 60;
+let interval;
+
+function checkStrength() {
+    const pwd = newPassword.value;
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[a-z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+    const labels = ["Weak", "Poor", "Fair", "Good", "Strong"];
+    const colors = ["bg-danger","bg-warning","bg-warning","bg-info","bg-success"];
+
+    strengthBar.className = "progress-bar " + colors[Math.max(score-1,0)];
+    strengthBar.style.width = (score*20)+"%";
+    strengthText.innerText = labels[Math.max(score-1,0)];
+}
+
+function sendOtp() {
+    const formData = new FormData(changePasswordForm);
+
+    fetch('@Url.Action("SendSuperAdminOtp","Settings")', {
+        method: "POST",
+        body: formData,
+        headers: {
+            'RequestVerificationToken':
+            document.querySelector('input[name="__RequestVerificationToken"]').value
+        }
+    })
+    .then(r => {
+        if (!r.ok) return r.text().then(t => { throw t });
+        return r.text();
+    })
+    .then(() => {
+        otpSection.classList.remove("d-none");
+        sendOtpBtn.classList.add("d-none");
+        verifyBtn.classList.remove("d-none");
+        startTimer();
+    })
+    .catch(alert);
+}
+
+function startTimer() {
+    resendText.innerText = `Resend OTP in ${otpTimer}s`;
+    interval = setInterval(() => {
+        otpTimer--;
+        resendText.innerText = `Resend OTP in ${otpTimer}s`;
+        if (otpTimer <= 0) {
+            clearInterval(interval);
+            resendText.innerHTML = `<a href="#" onclick="resendOtp()">Resend OTP</a>`;
+        }
+    }, 1000);
+}
+
+function resendOtp() {
+    otpTimer = 60;
+    resendText.innerText = "";
+    sendOtp();
+}
+
+otpInput?.addEventListener("input", () => {
+    verifyBtn.disabled = otpInput.value.trim() === "";
+});
+
+@if (TempData["ShowSuccessModal"] != null)
+{
+<text>
+new bootstrap.Modal(document.getElementById("successModal")).show();
+</text>
+}
+</script>

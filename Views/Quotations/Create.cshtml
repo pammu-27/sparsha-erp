@@ -1,0 +1,178 @@
+@model SparshaERP.Models.Quotation
+@{
+    var clients = ViewBag.Clients as List<SparshaERP.Models.Client>;
+}
+
+<div class="container mt-4">
+
+<div class="card shadow-sm">
+<div class="card-header bg-primary text-white">
+    <h5 class="mb-0">Create Quotation</h5>
+</div>
+
+<div class="card-body">
+
+<form asp-action="Create" method="post">
+
+<!-- CLIENT -->
+<div class="row g-3 mb-3">
+
+    <div class="col-md-6">
+        <label class="form-label">Client</label>
+        <select id="clientSelect" asp-for="ClientId" class="form-select">
+            <option value="">Select Client</option>
+            @foreach (var c in clients!)
+            {
+                <option value="@c.Id"
+                        data-address="@c.Address"
+                        data-phone="@c.Phone"
+                        data-zip="@c.ZipCode">
+                    @c.Name
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Phone</label>
+        <input id="phone" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Address</label>
+        <input id="address" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">ZIP</label>
+        <input id="zip" class="form-control" readonly />
+    </div>
+
+</div>
+
+<hr />
+
+<!-- ITEMS -->
+<div class="table-responsive">
+<table class="table table-bordered align-middle">
+<thead class="table-light">
+<tr>
+<th>Description</th>
+<th width="100">Qty</th>
+<th width="150">Rate</th>
+<th width="150">Amount</th>
+<th width="60"></th>
+</tr>
+</thead>
+<tbody id="itemsBody"></tbody>
+</table>
+</div>
+
+<button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addRow()">
++ Add Item
+</button>
+
+<hr />
+
+<!-- CHARGES -->
+<div class="row g-3 mb-3">
+
+    <div class="col-md-4">
+        <div class="form-check">
+            <input id="taxToggle"  asp-for="ApplyTax" class="form-check-input" type="checkbox" onchange="calc()" />
+            <label class="form-check-label">Tax %</label>
+        </div>
+        <input id="taxRate" asp-for="TaxPercent" class="form-control mt-1" value="18" oninput="calc()" />
+    </div>
+
+    <div class="col-md-4">
+        <div class="form-check">
+            <input id="transportToggle" asp-for="ApplyTransport" class="form-check-input" type="checkbox" onchange="calc()" />
+            <label class="form-check-label">Transport</label>
+        </div>
+        <input id="transportInput" asp-for="TransportCharge" class="form-control mt-1" value="0" oninput="calc()" />
+    </div>
+
+    <div class="col-md-4">
+        <div class="form-check">
+            <input id="otherToggle" asp-for="ApplyOther" class="form-check-input" type="checkbox" onchange="calc()" />
+            <label class="form-check-label">Other</label>
+        </div>
+        <input id="otherInput" asp-for="OtherCharge" class="form-control mt-1" value="0" oninput="calc()" />
+    </div>
+
+</div>
+
+<div class="bg-light p-3 rounded text-end mb-3">
+    <div>Items Subtotal : ₹ <span id="subTotal">0.00</span></div>
+    <h5 class="text-success">Grand Total : ₹ <span id="grandTotal">0.00</span></h5>
+</div>
+
+<button class="btn btn-success w-100">Save Quotation</button>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<!-- ================= SAFE JS (UI ONLY) ================= -->
+
+<script>
+
+const body = document.getElementById("itemsBody");
+
+function addRow(desc="", qty=1, rate=0)
+{
+    body.insertAdjacentHTML("beforeend", `
+    <tr>
+        <td><input name="description" value="${desc}" /></td>
+        <td><input class="qty" name="qty" value="${qty}" oninput="calc()" /></td>
+        <td><input class="rate" name="rate" value="${rate}" oninput="calc()" /></td>
+        <td><input class="amt" readonly /></td>
+        <td><button type="button" onclick="this.closest('tr').remove();calc()">X</button></td>
+    </tr>`);
+    calc();
+}
+
+function calc()
+{
+    let subtotal = 0;
+
+    document.querySelectorAll("#itemsBody tr").forEach(r => {
+
+        let q = +r.querySelector(".qty").value || 0;
+        let rate = +r.querySelector(".rate").value || 0;
+
+        let amt = q * rate;
+
+        r.querySelector(".amt").value = amt.toFixed(2);
+
+        subtotal += amt;
+    });
+
+    // ✅ preview values
+    subTotal.innerText = subtotal.toFixed(2);
+
+    let tax = taxToggle.checked ? subtotal * (taxRate.value/100) : 0;
+    let transport = transportToggle.checked ? +transportInput.value : 0;
+    let other = otherToggle.checked ? +otherInput.value : 0;
+
+    let grand = subtotal + tax + transport + other;
+
+    grandTotal.innerText = grand.toFixed(2);
+}
+
+
+clientSelect.onchange = function(){
+    let opt = this.selectedOptions[0];
+    address.value = opt.dataset.address || "";
+    phone.value = opt.dataset.phone || "";
+    zip.value = opt.dataset.zip || "";
+};
+
+addRow();
+calc();
+
+
+</script>

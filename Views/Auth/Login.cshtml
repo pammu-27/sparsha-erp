@@ -1,0 +1,168 @@
+@{
+    ViewData["Title"] = "Admin Access";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sparsha ERP | Secure Admin Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+body{
+    height:100vh;margin:0;
+    background:radial-gradient(circle at top,#0f172a,#020617 70%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Segoe UI",system-ui,sans-serif;
+    color:#e5e7eb;overflow:hidden;
+}
+.console{
+    width:420px;padding:36px;border-radius:16px;
+    background:rgba(15,23,42,.75);
+    backdrop-filter:blur(14px);
+    box-shadow:0 30px 80px rgba(0,0,0,.7);
+    opacity:0;transform:translateY(40px);
+    animation:enter .9s ease forwards;
+    position:relative;
+}
+@@keyframes enter{to{opacity:1;transform:none}}
+
+.title{text-align:center;font-size:20px;font-weight:600;letter-spacing:1px}
+.subtitle{
+    text-align:center;font-size:12px;letter-spacing:2px;
+    color:#94a3b8;margin-bottom:20px;
+}
+
+/* TYPING TEXT */
+.terminal{
+    font-family:monospace;
+    font-size:13px;color:#38bdf8;
+    white-space:nowrap;overflow:hidden;
+    border-right:2px solid #38bdf8;
+    width:0;animation:typing 3s steps(30) forwards,blink 1s infinite;
+    margin-bottom:18px;
+}
+@@keyframes typing{to{width:100%}}
+@@keyframes blink{50%{border-color:transparent}}
+
+/* INPUTS */
+.form-control{
+    background:transparent;
+    border:1px solid rgba(255,255,255,.15);
+    color:#e5e7eb;border-radius:10px;height:46px;
+}
+.form-control:focus{
+    background:transparent;color:#fff;
+    border-color:#38bdf8;
+    box-shadow:0 0 0 1px rgba(56,189,248,.4);
+}
+.form-label{font-size:12px;letter-spacing:1px}
+
+/* FINGERPRINT */
+.fingerprint{
+    width:70px;height:70px;border-radius:50%;
+    border:2px solid rgba(56,189,248,.4);
+    margin:0 auto 18px;
+    position:relative;
+}
+.fingerprint::after{
+    content:"";position:absolute;inset:8px;
+    border-radius:50%;
+    border:2px dashed rgba(56,189,248,.5);
+    animation:scan 2.5s linear infinite;
+}
+@@keyframes scan{
+    from{transform:rotate(0)}
+    to{transform:rotate(360deg)}
+}
+
+/* LOGIN BUTTON */
+.btn-login{
+    height:48px;border-radius:12px;
+    font-weight:600;letter-spacing:1px;
+    background:linear-gradient(135deg,#0ea5e9,#38bdf8);
+    border:none;color:#020617;
+}
+.btn-login:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 30px rgba(56,189,248,.35);
+}
+
+/* FAKE SECURITY CHECK */
+.progress-wrap{
+    display:none;margin-top:15px;
+}
+.progress{
+    height:6px;background:#020617;
+}
+.progress-bar{
+    width:0;background:#38bdf8;
+    animation:progress 2.5s forwards;
+}
+@@keyframes progress{to{width:100%}}
+
+.footer{
+    margin-top:22px;text-align:center;
+    font-size:11px;letter-spacing:1px;color:#64748b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="console">
+    <div class="title">SPARSHA ERP</div>
+    <div class="subtitle">SECURE ADMIN CONSOLE</div>
+
+    <div class="terminal">Initializing secure session...</div>
+
+    <div class="fingerprint"></div>
+
+    @if(ViewBag.Error!=null){
+        <div class="alert alert-danger text-center py-2">
+            @ViewBag.Error
+        </div>
+    }
+
+    <form method="post" asp-action="Login" onsubmit="startCheck()">
+        <div class="mb-3">
+            <label class="form-label">ADMIN ID</label>
+            <input name="username" class="form-control" required />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">ACCESS KEY</label>
+            <input type="password" name="password" class="form-control" required />
+        </div>
+
+        <div class="d-grid">
+            <button class="btn btn-login">AUTHORIZE ACCESS</button>
+        </div>
+
+        <div class="progress-wrap" id="check">
+            <div class="progress mt-3">
+                <div class="progress-bar"></div>
+            </div>
+            <small class="text-muted d-block mt-2 text-center">
+                Performing security validation...
+            </small>
+        </div>
+    </form>
+
+    <div class="footer">
+        INTERNAL SYSTEM • AUTHORIZED PERSONNEL ONLY
+    </div>
+</div>
+
+<script>
+function startCheck(){
+    document.getElementById("check").style.display="block";
+}
+</script>
+
+</body>
+</html>

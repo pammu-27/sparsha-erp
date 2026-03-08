@@ -1,0 +1,44 @@
+@model SparshaERP.Models.Client
+
+<h3>Add Client</h3>
+
+<form asp-action="Create">
+
+    <div class="row">
+
+        <div class="col-md-6 mb-3">
+            <label>Name</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label>Company</label>
+            <input asp-for="CompanyName" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label>Phone</label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label>City</label>
+            <input asp-for="City" class="form-control" />
+        </div>
+
+        <div class="col-md-12 mb-3">
+            <label>Address</label>
+            <textarea asp-for="Address" class="form-control"></textarea>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label>ZIP Code</label>
+            <input asp-for="ZipCode" class="form-control" />
+        </div>
+
+    </div>
+
+    <button class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+
+</form>

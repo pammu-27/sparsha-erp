@@ -1,0 +1,60 @@
+@model List<SparshaERP.Models.Quotation>
+
+<div class="container mt-4">
+
+<div class="card shadow-sm">
+
+<div class="card-header d-flex justify-content-between">
+    <h5 class="mb-0">Quotations</h5>
+    <a asp-action="Create" class="btn btn-primary btn-sm">+ New</a>
+</div>
+
+<div class="card-body table-responsive">
+
+<table class="table table-bordered table-hover align-middle">
+
+<thead class="table-light">
+<tr>
+    <th>Quote No</th>
+    <th>Client</th>
+    <th>Date</th>
+    <th>Time</th>
+    <th>Total</th>
+    <th width="200">Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+@foreach (var q in Model)
+{
+<tr>
+    <td>@q.QuoteNo</td>
+    <td>@q.Client?.Name</td>
+    <td>@q.Date.ToString("dd-MM-yyyy")</td>
+    <td>@q.Date.ToString("hh:mm tt")</td>
+    <td class="fw-bold text-success">₹ @q.TotalAmount</td>
+
+    <td>
+        <a asp-action="Edit" asp-route-id="@q.Id" class="btn btn-warning btn-sm">Edit</a>
+        <a asp-action="Print" asp-route-id="@q.Id" class="btn btn-info btn-sm">PDF</a>
+        <a asp-action="Delete" asp-route-id="@q.Id"
+           onclick="return confirm('Delete this quotation?')"
+           class="btn btn-danger btn-sm">Delete</a>
+           <a asp-action="GenerateBill"
+   asp-route-id="@q.Id"
+   class="btn btn-sm btn-success">
+   💰 Bill
+</a>
+
+    </td>
+</tr>
+}
+
+</tbody>
+
+</table>
+
+</div>
+</div>
+</div>

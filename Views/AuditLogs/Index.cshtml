@@ -1,0 +1,45 @@
+@model List<SparshaERP.Models.AdminAuditLog>
+
+<h2>Audit Logs</h2>
+
+<div style="margin-bottom:15px;">
+    <a class="btn btn-success" href="/AuditLogs/ExportCsv">Export CSV</a>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Admin Name</th>
+            <th>Action</th>
+            <th>IP</th>
+            <th>Date & Time (IST)</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model.Any())
+    {
+        foreach (var log in Model)
+        {
+            <tr>
+                <td>@log.Id</td>
+                <td>@log.AdminName</td>
+                <td>@log.Action</td>
+                <td>@log.IpAddress</td>
+                <td>
+                    @TimeZoneInfo.ConvertTimeFromUtc(
+                        log.CreatedAtUtc,
+                        TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")
+                    ).ToString("dd-MM-yyyy HH:mm:ss")
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="5" class="text-center">No audit logs found.</td>
+        </tr>
+    }
+    </tbody>
+</table>
