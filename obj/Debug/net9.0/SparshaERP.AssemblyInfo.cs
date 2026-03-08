@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SparshaERP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+30a8eac520b074d94f542e989f9cabf792ab064b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+68664b2965fa41615e9cf7119af2628c1c4e8076")]
 [assembly: System.Reflection.AssemblyProductAttribute("SparshaERP")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SparshaERP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
