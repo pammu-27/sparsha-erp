@@ -52,4 +52,6 @@ using (var scope = app.Services.CreateScope())
 
 app.Urls.Add("http://0.0.0.0:10000");
 
+Console.WriteLine(PasswordHelper.Hash("Pramod@27"));
+
 app.Run();

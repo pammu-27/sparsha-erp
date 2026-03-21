@@ -5,6 +5,7 @@ using SparshaERP.Models;
 
 namespace SparshaERP.Controllers
 {
+    [AuthFilter]
     public class HomeController : Controller
     {
         private readonly AppDbContext _context;
