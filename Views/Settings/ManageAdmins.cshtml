@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Manage Admin Users";
     bool isSuperAdmin = Context.Session.GetString("Role") == "SuperAdmin";
+    int currentAdminId = Context.Session.GetInt32("AdminId") ?? 0;
 }
 
 <style>
@@ -52,6 +53,16 @@
     </a>
 </div>
 
+<!-- ================= ALERTS ================= -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <!-- ================= ADD ADMIN ================= -->
 @if (isSuperAdmin)
 {
@@ -75,6 +86,12 @@
                 <input name="password" type="password" class="form-control"
                        placeholder="Initial Password" required />
             </div>
+            <div class="col-md-3 mb-2">
+                <select name="role" class="form-control">
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>
+                </select>
+            </div>
         </div>
 
         <button class="btn btn-primary mt-2">Add Admin</button>
@@ -96,63 +113,89 @@
                 <th>Username</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th style="width:300px;">Actions</th>
+                <th style="width:320px;">Actions</th>
             </tr>
         </thead>
         <tbody>
 @foreach (var admin in Model)
 {
-            <tr>
-                <td>@admin.Name</td>
-                <td>@admin.Email</td>
-                <td>@admin.Username</td>
-                <td>@admin.Role</td>
-                <td>
-                    @if (admin.IsActive)
-                    {
-                        <span class="badge-active">Active</span>
-                    }
-                    else
-                    {
-                        <span class="badge-inactive">Inactive</span>
-                    }
-                </td>
+    <tr>
+        <td>@admin.Name</td>
+        <td>@admin.Email</td>
+        <td>@admin.Username</td>
+        <td>@admin.Role</td>
+        <td>
+            @if (admin.IsActive)
+            {
+                <span class="badge-active">Active</span>
+            }
+            else
+            {
+                <span class="badge-inactive">Inactive</span>
+            }
+        </td>
 
-                <td class="action-btns">
-                @* SUPER ADMIN ACTIONS ONLY *@
-                @if (isSuperAdmin && admin.Role != "SuperAdmin")
-                {
-                    <!-- SET PASSWORD (OPTION 2) -->
-                    <form asp-action="SetAdminPassword" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="adminId" value="@admin.Id" />
+        <td class="action-btns">
 
-                        <input type="password" name="newPassword"
-                               class="form-control form-control-sm mb-1"
-                               placeholder="New Password" required />
+        @if (isSuperAdmin && admin.Role != "SuperAdmin" && admin.Id != currentAdminId)
+        {
+            <!-- SET PASSWORD -->
+            <form asp-action="SetAdminPassword" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="adminId" value="@admin.Id" />
 
-                        <input type="password" name="confirmPassword"
-                               class="form-control form-control-sm mb-1"
-                               placeholder="Confirm Password" required />
+                <input type="password" name="newPassword"
+                       class="form-control form-control-sm mb-1"
+                       placeholder="New Password" required />
 
-                        <button class="btn btn-sm btn-danger w-100"
-                                onclick="return confirm('Set new password for this admin?');">
-                            Set Password
-                        </button>
-                    </form>
+                <input type="password" name="confirmPassword"
+                       class="form-control form-control-sm mb-1"
+                       placeholder="Confirm Password" required />
 
-                    <!-- ACTIVATE / DEACTIVATE -->
-                    <form asp-action="ToggleAdmin" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@admin.Id" />
-                        <button class="btn btn-sm btn-warning w-100"
-                                onclick="return confirm('Change admin status?');">
-                            @(admin.IsActive ? "Deactivate" : "Activate")
-                        </button>
-                    </form>
-                }
-                </td>
-            </tr>
+                <button class="btn btn-sm btn-danger w-100"
+                        onclick="return confirm('Set new password for this admin?');">
+                    Set Password
+                </button>
+            </form>
+
+            <!-- ACTIVATE / DEACTIVATE -->
+            <form asp-action="ToggleAdmin" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@admin.Id" />
+                <button class="btn btn-sm btn-warning w-100"
+                        onclick="return confirm('Change admin status?');">
+                    @(admin.IsActive ? "Deactivate" : "Activate")
+                </button>
+            </form>
+
+            <!-- UPDATE ROLE -->
+            <form asp-action="UpdateAdminRole" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@admin.Id" />
+
+                <select name="role" class="form-control mb-1">
+                    <option value="Admin" asp-selected="@(admin.Role == "Admin")">Admin</option>
+                    <option value="Staff" asp-selected="@(admin.Role == "Staff")">Staff</option>
+                </select>
+
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    Update Role
+                </button>
+            </form>
+
+            <!-- DELETE -->
+            <form asp-action="DeleteAdmin" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@admin.Id" />
+
+                <button type="submit" class="btn btn-sm btn-danger w-100"
+                        onclick="return confirm('Are you sure to delete this admin?');">
+                    Delete
+                </button>
+            </form>
+        }
+        </td>
+    </tr>
 }
         </tbody>
     </table>

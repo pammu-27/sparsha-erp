@@ -36,7 +36,13 @@ namespace SparshaERP.Controllers
         // ===================== ADD ADMIN USERS (SUPER ADMIN ONLY) =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddAdmin(string name, string email, string username, string password)
+        public IActionResult AddAdmin(
+            string name,
+            string email,
+            string username,
+            string password,
+            string role
+        )
         {
             if (HttpContext.Session.GetString("Role") != "SuperAdmin")
                 return Unauthorized();
@@ -52,6 +58,7 @@ namespace SparshaERP.Controllers
                 PasswordHash = PasswordHelper.Hash(password),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
+                Role = role
             };
 
             _context.AdminUsers.Add(admin);
@@ -214,6 +221,72 @@ namespace SparshaERP.Controllers
                 HttpContext
             );
 
+            return RedirectToAction("ManageAdmins");
+        }
+
+        // for future: add delete admin functionality with proper safeguards (e.g. cannot delete self, cannot delete super admin, confirmation prompt, etc.)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateAdminRole(int id, string role)
+        {
+            if (HttpContext.Session.GetString("Role") != "SuperAdmin")
+                return Unauthorized();
+
+            var admin = _context.AdminUsers.FirstOrDefault(x => x.Id == id);
+            if (admin == null)
+                return RedirectToAction("ManageAdmins");
+
+            admin.Role = role;
+
+            _context.SaveChanges();
+
+            _auditLogger.Log(
+                HttpContext.Session.GetInt32("AdminId")!.Value,
+                HttpContext.Session.GetString("AdminName")!,
+                $"SuperAdmin changed role of '{admin.Username}' to '{role}'",
+                HttpContext
+            );
+
+            TempData["Success"] = "Admin role updated successfully";
+            return RedirectToAction("ManageAdmins");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteAdmin(int id)
+        {
+            if (HttpContext.Session.GetString("Role") != "SuperAdmin")
+                return Unauthorized();
+
+            var admin = _context.AdminUsers.FirstOrDefault(x => x.Id == id);
+            if (admin == null)
+                return RedirectToAction("ManageAdmins");
+
+            // ❌ Prevent deleting yourself
+            if (admin.Id == HttpContext.Session.GetInt32("AdminId"))
+            {
+                TempData["Error"] = "You cannot delete your own account";
+                return RedirectToAction("ManageAdmins");
+            }
+
+            // ❌ Prevent deleting SuperAdmin
+            if (admin.Role == "SuperAdmin")
+            {
+                TempData["Error"] = "SuperAdmin cannot be deleted";
+                return RedirectToAction("ManageAdmins");
+            }
+
+            _context.AdminUsers.Remove(admin);
+            _context.SaveChanges();
+
+            _auditLogger.Log(
+                HttpContext.Session.GetInt32("AdminId")!.Value,
+                HttpContext.Session.GetString("AdminName")!,
+                $"SuperAdmin deleted admin '{admin.Username}'",
+                HttpContext
+            );
+
+            TempData["Success"] = "Admin deleted successfully";
             return RedirectToAction("ManageAdmins");
         }
 
