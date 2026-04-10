@@ -22,6 +22,38 @@ namespace SparshaERP.Controllers
             _auditLogger = auditLogger;
         }
 
+        //for manual bill creation
+        public IActionResult Create()
+        {
+            ViewBag.Clients = _context.Clients.ToList();
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Bill bill, List<BillItem> items)
+        {
+            bill.InvoiceNo = await GenerateInvoiceNo();
+
+            // ✅ FIX DATE
+            bill.Date = DateTime.UtcNow;
+
+            if (bill.DueDate.HasValue)
+            {
+                bill.DueDate = DateTime.SpecifyKind(bill.DueDate.Value, DateTimeKind.Utc);
+            }
+
+            bill.SubTotal = items.Sum(x => x.Amount);
+            bill.TotalAmount =
+                bill.SubTotal + bill.TaxAmount + bill.TransportCharge + bill.OtherCharge;
+
+            bill.Items = items;
+
+            _context.Bills.Add(bill);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
         // =========================================
         // LIST
         // =========================================

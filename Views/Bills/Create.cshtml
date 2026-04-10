@@ -1,0 +1,182 @@
+@model SparshaERP.Models.Bill
+
+<h3>Create Custom Bill</h3>
+
+<form method="post">
+
+<!-- CLIENT -->
+<div class="mb-3">
+    <label>Select Client</label>
+    <select name="ClientId" class="form-control">
+        @foreach (var c in ViewBag.Clients)
+        {
+            <option value="@c.Id">@c.Name</option>
+        }
+    </select>
+</div>
+
+<!-- ITEMS -->
+<h5>Items</h5>
+<table class="table" id="itemsTable">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input name="items[0].Description" class="form-control" /></td>
+            <td><input name="items[0].Qty" class="form-control qty" /></td>
+            <td><input name="items[0].Rate" class="form-control rate" /></td>
+            <td><input name="items[0].Amount" class="form-control amount" readonly /></td>
+        </tr>
+    </tbody>
+</table>
+
+<button type="button" onclick="addRow()" class="btn btn-secondary btn-sm">
+    + Add Item
+</button>
+
+<!-- CHARGES -->
+<div class="row mt-4">
+
+    <div class="col-md-3">
+        <label>GST %</label>
+        <input id="gstPercent" class="form-control" value="18" />
+    </div>
+
+    <div class="col-md-3">
+        <label>CGST</label>
+        <input id="cgst" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-3">
+        <label>SGST</label>
+        <input id="sgst" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-3">
+        <label>Total GST</label>
+        <input name="TaxAmount" id="taxAmount" class="form-control" readonly />
+    </div>
+
+</div>
+<div class="row mt-3">
+
+    <div class="col-md-3">
+        <label>Transport</label>
+        <input name="TransportCharge" id="transport" class="form-control" value="0" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Other Charges</label>
+        <input name="OtherCharge" id="other" class="form-control" value="0" />
+    </div>
+
+</div>
+
+<br />
+<div class="mt-4 p-3 border rounded bg-light">
+
+    <h5>Bill Summary</h5>
+
+    <p>Subtotal: ₹ <span id="subtotal">0</span></p>
+    <p>GST: ₹ <span id="gstTotal">0</span></p>
+    <p>Transport: ₹ <span id="transportPreview">0</span></p>
+    <p>Other: ₹ <span id="otherPreview">0</span></p>
+
+    <h4>Total: ₹ <span id="grandTotal">0</span></h4>
+
+</div>
+
+<button type="submit" class="btn btn-success">
+    Generate Bill
+</button>
+
+</form>
+
+<script>
+let index = 1;
+
+function addRow() {
+    const table = document.querySelector("#itemsTable tbody");
+
+    table.innerHTML += `
+    <tr>
+        <td><input name="items[${index}].Description" class="form-control"/></td>
+        <td><input name="items[${index}].Qty" class="form-control qty"/></td>
+        <td><input name="items[${index}].Rate" class="form-control rate"/></td>
+        <td><input name="items[${index}].Amount" class="form-control amount" readonly/></td>
+    </tr>
+    `;
+
+    index++;
+}
+</script>
+
+<script>
+function calculateTotals() {
+
+    let subtotal = 0;
+
+    document.querySelectorAll("#itemsTable tbody tr").forEach(row => {
+        const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+        const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+
+        const amount = qty * rate;
+
+        row.querySelector(".amount").value = amount.toFixed(2);
+
+        subtotal += amount;
+    });
+
+    // GST
+    const gstPercent = parseFloat(document.getElementById("gstPercent").value) || 0;
+    const gstTotal = subtotal * gstPercent / 100;
+
+    const cgst = gstTotal / 2;
+    const sgst = gstTotal / 2;
+
+    document.getElementById("cgst").value = cgst.toFixed(2);
+    document.getElementById("sgst").value = sgst.toFixed(2);
+    document.getElementById("taxAmount").value = gstTotal.toFixed(2);
+
+    // Charges
+    const transport = parseFloat(document.getElementById("transport").value) || 0;
+    const other = parseFloat(document.getElementById("other").value) || 0;
+
+    // Grand Total
+    const grandTotal = subtotal + gstTotal + transport + other;
+
+    // Update UI
+    document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+    document.getElementById("gstTotal").innerText = gstTotal.toFixed(2);
+    document.getElementById("transportPreview").innerText = transport.toFixed(2);
+    document.getElementById("otherPreview").innerText = other.toFixed(2);
+    document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
+}
+
+// Trigger calculation on input
+document.addEventListener("input", function () {
+    calculateTotals();
+});
+
+// Run once initially
+calculateTotals();
+</script>
+
+<script>
+document.addEventListener("input", function(e) {
+    if (e.target.classList.contains("qty") || e.target.classList.contains("rate")) {
+        const row = e.target.closest("tr");
+
+        const qty = parseFloat(row.querySelector(".qty").value) || 0;
+        const rate = parseFloat(row.querySelector(".rate").value) || 0;
+
+        row.querySelector(".amount").value = (qty * rate).toFixed(2);
+    }
+});
+</script>

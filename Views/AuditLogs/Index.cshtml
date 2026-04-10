@@ -1,6 +1,7 @@
 @model List<SparshaERP.Models.AdminAuditLog>
-
-<h2>Audit Logs</h2>
+@{
+    ViewData["Title"] = "Audit Logs";
+}
 
 <div style="margin-bottom:15px;">
     <a class="btn btn-success" href="/AuditLogs/ExportCsv">Export CSV</a>

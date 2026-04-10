@@ -8,195 +8,369 @@
 
 <style>
 .erp-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
-.erp-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+
+.table tr {
+    transition: all 0.2s ease;
 }
+
+.table tr:hover {
+    background: #f9fafb;
+}
+
 .badge-active {
-    background: #e6f7ee;
-    color: #0f9d58;
-    padding: 4px 10px;
+    background: #ecfdf5;
+    color: #059669;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 12px;
 }
+
 .badge-inactive {
-    background: #fdecea;
-    color: #d93025;
-    padding: 4px 10px;
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 12px;
 }
-.action-btns form {
-    margin-bottom: 6px;
+
+.btn {
+    border-radius: 10px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
-.btn-outline-secondary {
-    border: 1px solid #d1d5db;
-    color: #374151;
-    background: #fff;
+
+.btn-primary {
+    background: #2563eb;
 }
-.btn-outline-secondary:hover {
-    background: #f3f4f6;
+
+.btn-warning {
+    background: #f59e0b;
+}
+
+.btn-danger {
+    background: #dc2626;
+}
+
+.btn-outline-danger {
+    border: 1px solid #dc2626;
+    color: #dc2626;
+}
+
+.btn-outline-danger:hover {
+    background: #dc2626;
+    color: #fff;
 }
 </style>
 
-<!-- ================= BACK ================= -->
-<div class="mb-3">
-    <a href="javascript:history.back()" class="btn btn-outline-secondary">
-        ← Back
-    </a>
+<div class="erp-card">
+<div class="row mb-4">
+
+    <div class="col-md-4">
+        <div class="p-3 rounded shadow-sm bg-white border">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Total Users</small>
+                    <h4 class="mb-0">@Model.Count</h4>
+                </div>
+                <i class="bi bi-people fs-3 text-primary"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="p-3 rounded shadow-sm bg-white border">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Active Users</small>
+                    <h4 class="mb-0">@Model.Count(x => x.IsActive)</h4>
+                </div>
+                <i class="bi bi-check-circle fs-3 text-success"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="p-3 rounded shadow-sm bg-white border">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Inactive Users</small>
+                    <h4 class="mb-0">@Model.Count(x => !x.IsActive)</h4>
+                </div>
+                <i class="bi bi-x-circle fs-3 text-danger"></i>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- ================= ALERTS ================= -->
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="mb-0">Admin Users</h3>
+        <small class="text-muted">Manage roles and permissions</small>
+    </div>
+</div>
 
-<!-- ================= ADD ADMIN ================= -->
 @if (isSuperAdmin)
 {
 <div class="erp-card mb-4">
-    <h5 class="mb-3">Add New Admin</h5>
 
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="mb-0">Add New Admin</h5>
+            <small class="text-muted">Create and assign role to new user</small>
+        </div>
+    </div>
+
+    <!-- FORM -->
     <form method="post" asp-action="AddAdmin">
         @Html.AntiForgeryToken()
 
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <input name="name" class="form-control" placeholder="Name" required />
+        <div class="row g-3">
+
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Name</label>
+                <input name="name" class="form-control" placeholder="Enter name" required />
             </div>
-            <div class="col-md-3 mb-2">
-                <input name="email" class="form-control" placeholder="Email" required />
+
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Email</label>
+                <input name="email" type="email" class="form-control" placeholder="Enter email" required />
             </div>
-            <div class="col-md-3 mb-2">
-                <input name="username" class="form-control" placeholder="Username" required />
+
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Username</label>
+                <input name="username" class="form-control" placeholder="Enter username" required />
             </div>
-            <div class="col-md-3 mb-2">
+
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Password</label>
                 <input name="password" type="password" class="form-control"
-                       placeholder="Initial Password" required />
+                       placeholder="Initial password" required />
             </div>
-            <div class="col-md-3 mb-2">
+
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Role</label>
                 <select name="role" class="form-control">
                     <option value="Admin">Admin</option>
                     <option value="Staff">Staff</option>
                 </select>
             </div>
+
         </div>
 
-        <button class="btn btn-primary mt-2">Add Admin</button>
+        <!-- BUTTON -->
+        <div class="mt-3">
+            <button class="btn btn-primary px-4">
+                <i class="bi bi-person-plus"></i> Add Admin
+            </button>
+        </div>
+
     </form>
+
 </div>
 }
 
-<!-- ================= MANAGE ADMINS ================= -->
-<div class="erp-card">
-    <div class="erp-header">
-        <h3>Manage Admin Users</h3>
-    </div>
+<table class="table">
+<thead>
+<tr>
+<th>User</th>
+<th>Contact</th>
+<th>Role</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
 
-    <table class="table table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th style="width:320px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+<tbody>
 @foreach (var admin in Model)
 {
-    <tr>
-        <td>@admin.Name</td>
-        <td>@admin.Email</td>
-        <td>@admin.Username</td>
-        <td>@admin.Role</td>
-        <td>
-            @if (admin.IsActive)
-            {
-                <span class="badge-active">Active</span>
-            }
-            else
-            {
-                <span class="badge-inactive">Inactive</span>
-            }
-        </td>
+<tr>
+<td>
+<strong>@admin.Name</strong><br>
+<small class="text-muted">@admin.Username</small>
+</td>
 
-        <td class="action-btns">
+<td>
+<small>@admin.Email</small>
+</td>
+<td>@admin.Role</td>
 
-        @if (isSuperAdmin && admin.Role != "SuperAdmin" && admin.Id != currentAdminId)
-        {
-            <!-- SET PASSWORD -->
-            <form asp-action="SetAdminPassword" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="adminId" value="@admin.Id" />
-
-                <input type="password" name="newPassword"
-                       class="form-control form-control-sm mb-1"
-                       placeholder="New Password" required />
-
-                <input type="password" name="confirmPassword"
-                       class="form-control form-control-sm mb-1"
-                       placeholder="Confirm Password" required />
-
-                <button class="btn btn-sm btn-danger w-100"
-                        onclick="return confirm('Set new password for this admin?');">
-                    Set Password
-                </button>
-            </form>
-
-            <!-- ACTIVATE / DEACTIVATE -->
-            <form asp-action="ToggleAdmin" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@admin.Id" />
-                <button class="btn btn-sm btn-warning w-100"
-                        onclick="return confirm('Change admin status?');">
-                    @(admin.IsActive ? "Deactivate" : "Activate")
-                </button>
-            </form>
-
-            <!-- UPDATE ROLE -->
-            <form asp-action="UpdateAdminRole" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@admin.Id" />
-
-                <select name="role" class="form-control mb-1">
-                    <option value="Admin" asp-selected="@(admin.Role == "Admin")">Admin</option>
-                    <option value="Staff" asp-selected="@(admin.Role == "Staff")">Staff</option>
-                </select>
-
-                <button type="submit" class="btn btn-sm btn-primary w-100">
-                    Update Role
-                </button>
-            </form>
-
-            <!-- DELETE -->
-            <form asp-action="DeleteAdmin" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@admin.Id" />
-
-                <button type="submit" class="btn btn-sm btn-danger w-100"
-                        onclick="return confirm('Are you sure to delete this admin?');">
-                    Delete
-                </button>
-            </form>
-        }
-        </td>
-    </tr>
+<td>
+@if (admin.IsActive)
+{
+<span class="badge-active">Active</span>
 }
-        </tbody>
-    </table>
+else
+{
+<span class="badge-inactive">Inactive</span>
+}
+</td>
+
+<td>
+@if (isSuperAdmin && admin.Role != "SuperAdmin" && admin.Id != currentAdminId)
+{
+<button class="btn btn-sm btn-primary"
+onclick="openRoleModal(@admin.Id, '@admin.Role')">
+<i class="bi bi-person-gear"></i> Role
+</button>
+
+<button class="btn btn-sm btn-warning"
+onclick="openStatusModal(@admin.Id)">
+<i class="bi bi-toggle-on"></i> Status
+</button>
+
+<button class="btn btn-sm btn-danger"
+onclick="openPasswordModal(@admin.Id)">
+<i class="bi bi-key"></i> Password
+</button>
+
+<button class="btn btn-sm btn-outline-danger"
+onclick="openDeleteModal(@admin.Id)">
+<i class="bi bi-trash"></i> Delete
+</button>
+}
+</td>
+
+</tr>
+}
+</tbody>
+</table>
+
 </div>
+
+<!-- PASSWORD MODAL -->
+<div class="modal fade" id="passwordModal">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<form asp-action="SetAdminPassword" method="post">
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="adminId" id="pwdAdminId" />
+
+<div class="modal-header">
+<h5>Set Password</h5>
+</div>
+
+<div class="modal-body">
+<input type="password" name="newPassword" class="form-control mb-2" placeholder="New Password" required />
+<input type="password" name="confirmPassword" class="form-control" placeholder="Confirm Password" required />
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-danger">Update</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<!-- ROLE MODAL -->
+<div class="modal fade" id="roleModal">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<form asp-action="UpdateAdminRole" method="post">
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="id" id="roleAdminId" />
+
+<div class="modal-header">
+<h5>Update Role</h5>
+</div>
+
+<div class="modal-body">
+<select name="role" id="roleSelect" class="form-control">
+<option value="Admin">Admin</option>
+<option value="Staff">Staff</option>
+</select>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-primary">Update</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<!-- STATUS MODAL -->
+<div class="modal fade" id="statusModal">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<form asp-action="ToggleAdmin" method="post">
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="id" id="statusAdminId" />
+
+<div class="modal-body text-center">
+<h5>Change Status?</h5>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-warning">Confirm</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade" id="deleteModal">
+<div class="modal-dialog">
+<div class="modal-content">
+
+<form asp-action="DeleteAdmin" method="post">
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="id" id="deleteAdminId" />
+
+<div class="modal-body text-center">
+<h5>Delete this admin?</h5>
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-danger">Delete</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+
+<script>
+function openPasswordModal(id){
+document.getElementById("pwdAdminId").value=id;
+new bootstrap.Modal(document.getElementById("passwordModal")).show();
+}
+
+function openRoleModal(id, role){
+document.getElementById("roleAdminId").value=id;
+document.getElementById("roleSelect").value=role;
+new bootstrap.Modal(document.getElementById("roleModal")).show();
+}
+
+function openStatusModal(id){
+document.getElementById("statusAdminId").value=id;
+new bootstrap.Modal(document.getElementById("statusModal")).show();
+}
+
+function openDeleteModal(id){
+document.getElementById("deleteAdminId").value=id;
+new bootstrap.Modal(document.getElementById("deleteModal")).show();
+}
+</script>
