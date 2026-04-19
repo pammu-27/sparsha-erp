@@ -43,6 +43,7 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapGet("/health", () => "OK");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -50,7 +51,6 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-app.Urls.Add("http://0.0.0.0:10000");
-
+//app.Urls.Add("http://0.0.0.0:10000");
 
 app.Run();
